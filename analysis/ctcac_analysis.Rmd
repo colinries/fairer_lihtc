@@ -1,0 +1,19 @@
+---
+title: "CTCAC in Context"
+author: "Colin Ries"
+header-includes:
+- \usepackage{booktabs}
+- \usepackage{siunitx}
+- \newcolumntype{d}{S[input-symbols = ()]}
+output:
+  slidy_presentation: default
+  html_notebook: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(warning=FALSE)
+
+```
+
