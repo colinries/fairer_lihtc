@@ -43,25 +43,38 @@ library(haven)
 # Load National LIHTC data
 lihtc <- read_csv('../data/LIHTCPUB.CSV')
 
-lihtc <-  lihtc %>% 
-  filter((yr_alloc >= 2003) & (yr_alloc <= 2019)) %>% 
-  filter(!is.na(dda))
+# lihtc <-  lihtc %>% 
+#   filter((yr_alloc >= 2003) & (yr_alloc <= 2019)) %>% 
+#   filter(!is.na(dda))
 
-dda_sites <- lihtc %>%
-  group_by(proj_st, yr_alloc) %>%
-  # Do not distinguish between metro and non-metro DDAs
-  mutate(dda = 1*(dda!=0)) %>% 
-  summarise(y= sum(dda)/n())
+ctcac <- lihtc %>% 
+  filter(proj_st == 'CA') %>% 
+  mutate(qct = 0+ 1*(qct==1)) %>% 
+  mutate(dda = 1*(dda!=0))
+
+```
+
+```{r qct}
 
 qct_sites <- lihtc %>% 
   group_by(proj_st, yr_alloc) %>%
   mutate(qct = 0+ 1*(qct==1)) %>% 
   summarise(y= sum(qct)/n())
 
-ctcac <- lihtc %>% 
-  filter(proj_st == 'CA') %>% 
-  mutate(qct = 0+ 1*(qct==1)) %>% 
-  mutate(dda = 1*(dda!=0))
+ggplot(data = ca_qcts) +
+  geom_line(mapping = aes(
+    x=yr_alloc, 
+    y = y))
+
+```
+
+```{r dda}
+
+dda_sites <- lihtc %>%
+  group_by(proj_st, yr_alloc) %>%
+  # Do not distinguish between metro and non-metro DDAs
+  mutate(dda = 1*(dda!=0)) %>% 
+  summarise(y= sum(dda)/n())
 
 ggplot(data = dda_sites) +
   geom_line(mapping = aes(
@@ -70,16 +83,5 @@ ggplot(data = dda_sites) +
     group= proj_st,
     color = proj_st))
 
-ggplot(data = ca_qcts) +
-  geom_line(mapping = aes(
-    x=yr_alloc, 
-    y = y))
-
-
 ```
-
-```{r qct}
-
-```
-
 
