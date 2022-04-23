@@ -48,19 +48,38 @@ lihtc <-  lihtc %>%
   filter(!is.na(dda))
 
 dda_sites <- lihtc %>%
-  group_by(proj_st, yr_alloc) %>% 
-  summarise(y= sum(dda==1)/n())
+  group_by(proj_st, yr_alloc) %>%
+  # Do not distinguish between metro and non-metro DDAs
+  mutate(dda = 1*(dda!=0)) %>% 
+  summarise(y= sum(dda)/n())
+
+qct_sites <- lihtc %>% 
+  group_by(proj_st, yr_alloc) %>%
+  mutate(qct = 0+ 1*(qct==1)) %>% 
+  summarise(y= sum(qct)/n())
 
 ctcac <- lihtc %>% 
-  filter(proj_st == 'CA')
+  filter(proj_st == 'CA') %>% 
+  mutate(qct = 0+ 1*(qct==1)) %>% 
+  mutate(dda = 1*(dda!=0))
 
 ggplot(data = dda_sites) +
   geom_line(mapping = aes(
     x=yr_alloc, 
     y = y, 
-    group=proj_st,
+    group= proj_st,
     color = proj_st))
-  
+
+ggplot(data = ca_qcts) +
+  geom_line(mapping = aes(
+    x=yr_alloc, 
+    y = y))
+
 
 ```
+
+```{r qct}
+
+```
+
 
