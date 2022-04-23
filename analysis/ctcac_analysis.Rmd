@@ -17,3 +17,50 @@ knitr::opts_chunk$set(warning=FALSE)
 
 ```
 
+# Introduction
+
+Measuring a program impact
+
+- Evolving legal landscape
+- Changing federal policies
+- Shifting administrative priorities
+- Public and elite attitudes
+
+
+---
+
+# Data & Methods
+
+```{r packages}
+
+library(tidyverse)
+library(haven)
+
+```
+
+
+```{r import-data}
+# Load National LIHTC data
+lihtc <- read_csv('../data/LIHTCPUB.CSV')
+
+lihtc <-  lihtc %>% 
+  filter((yr_alloc >= 2003) & (yr_alloc <= 2019)) %>% 
+  filter(!is.na(dda))
+
+dda_sites <- lihtc %>%
+  group_by(proj_st, yr_alloc) %>% 
+  summarise(y= sum(dda==1)/n())
+
+ctcac <- lihtc %>% 
+  filter(proj_st == 'CA')
+
+ggplot(data = dda_sites) +
+  geom_line(mapping = aes(
+    x=yr_alloc, 
+    y = y, 
+    group=proj_st,
+    color = proj_st))
+  
+
+```
+
