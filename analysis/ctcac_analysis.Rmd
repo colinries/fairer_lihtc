@@ -39,19 +39,39 @@ library(haven)
 ```
 
 
-```{r import-data}
+```{r import_data}
 # Load National LIHTC data
 lihtc <- read_csv('../data/LIHTCPUB.CSV')
 
 lihtc <- lihtc %>% 
   filter(yr_alloc <= 2019)
 
-ctcac <- lihtc %>% 
+lihtc_ca <- lihtc %>% 
   filter(proj_st == 'CA') %>% 
   mutate(qct = 0+ 1*(qct==1)) %>% 
   mutate(dda = 1*(dda!=0))
 
 ```
+
+```{r data_quality}
+lihtc_ca <- lihtc_ca %>% filter(yr_alloc <= 2019)
+
+# Calculate the number of projects allocated credits by year
+ggplot(mapping = aes(x=yr_alloc)) +
+  #geom_freqpoly(data = lihtc) +
+  geom_freqpoly(data = lihtc_ca)
+
+# Calculate the total number of low-income units for each allocation year
+li_units_ca <- lihtc_ca %>% 
+  group_by(yr_alloc) %>% 
+  summarise(y = sum(li_units, na.rm=TRUE))
+
+ggplot(data = li_units_ca, mapping = aes(x=yr_alloc, y=y)) +
+  geom_line()
+
+
+```
+
 
 ```{r qct}
 
@@ -83,19 +103,34 @@ ggplot(data = comp_qcts) +
 ```{r dda}
 
 dda_sites <- lihtc %>%
-  filter(!is.na(dda)) %>% 
-  group_by(proj_st, yr_alloc) %>%
+  filter(yr_alloc >= 2003) %>% 
   # Do not distinguish between metro and non-metro DDAs
-  mutate(dda = 1*(dda!=0)) %>% 
-  summarise(y= sum(dda)/n())
+  mutate(dda = 1*(dda!=0)) %>%
+  group_by(proj_st, yr_alloc) %>%
+  summarise(y=mean(dda, na.rm = TRUE))
 
 ca_dda <- dda_sites %>% 
-  filter(proj_st == "CA")
+  filter(proj_st == "CA") %>% 
+  group_by(yr_alloc) %>% 
+  summarise(y=mean(y, na.rm = TRUE))
 
-ggplot(data = ca_dda) +
-  geom_line(mapping = aes(
-    x=yr_alloc, 
-    y = y))
+us_dda <- dda_sites %>%
+  filter(proj_st != "CA") %>%
+  group_by(yr_alloc) %>% 
+  summarise(y=mean(y, na.rm = TRUE))
+
+comp_dda <- ca_dda %>% 
+  inner_join(us_dda,by="yr_alloc") %>% 
+  filter((yr_alloc <= 2019)&(yr_alloc >= 2003))
+
+ggplot(data = comp_dda) +
+  geom_line(mapping = aes(yr_alloc, y.x, color = "green")) +
+  geom_line(mapping = aes(yr_alloc, y.y))
+```
+
+```{r nonprofits}
+
+
 
 ```
 
