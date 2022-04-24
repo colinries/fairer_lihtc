@@ -43,9 +43,8 @@ library(haven)
 # Load National LIHTC data
 lihtc <- read_csv('../data/LIHTCPUB.CSV')
 
-# lihtc <-  lihtc %>% 
-#   filter((yr_alloc >= 2003) & (yr_alloc <= 2019)) %>% 
-#   filter(!is.na(dda))
+lihtc <- lihtc %>% 
+  filter(yr_alloc <= 2019)
 
 ctcac <- lihtc %>% 
   filter(proj_st == 'CA') %>% 
@@ -59,29 +58,49 @@ ctcac <- lihtc %>%
 qct_sites <- lihtc %>% 
   group_by(proj_st, yr_alloc) %>%
   mutate(qct = 0+ 1*(qct==1)) %>% 
-  summarise(y= sum(qct)/n())
+  summarise(y=mean(qct, na.rm = TRUE))
 
-ggplot(data = ca_qcts) +
-  geom_line(mapping = aes(
-    x=yr_alloc, 
-    y = y))
+ca_qcts <- qct_sites %>% 
+  filter(proj_st == "CA") %>% 
+  group_by(yr_alloc) %>% 
+  summarise(y=mean(y, na.rm = TRUE))
+
+us_qcts <- qct_sites %>% 
+  group_by(yr_alloc) %>% 
+  summarise(y=mean(y, na.rm = TRUE))
+
+comp_qcts <- ca_qcts %>% 
+  inner_join(us_qcts,by="yr_alloc")
+
+ggplot(data = comp_qcts) +
+  geom_line(mapping = aes(yr_alloc, y.x, color = "green")) +
+  geom_line(mapping = aes(yr_alloc, y.y))
+
+ggplot(data = qct_sites) mapping = aes(yr_alloc, color = proj_st)) +
+  geom_line(data = filter(qct_sites, proj_st == "CA")) +
+  stat_summary(fun.data = mean)
+    # geom_line(
+  #   data = filter(qct_sites, proj_st != "CA"),
+  #   stat = stat_sum
 
 ```
 
 ```{r dda}
 
 dda_sites <- lihtc %>%
+  filter(!is.na(dda)) %>% 
   group_by(proj_st, yr_alloc) %>%
   # Do not distinguish between metro and non-metro DDAs
   mutate(dda = 1*(dda!=0)) %>% 
   summarise(y= sum(dda)/n())
 
-ggplot(data = dda_sites) +
+ca_dda <- dda_sites %>% 
+  filter(proj_st == "CA")
+
+ggplot(data = ca_dda) +
   geom_line(mapping = aes(
     x=yr_alloc, 
-    y = y, 
-    group= proj_st,
-    color = proj_st))
+    y = y))
 
 ```
 
