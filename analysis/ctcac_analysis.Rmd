@@ -46,15 +46,20 @@ lihtc <- read_csv('../data/LIHTCPUB.CSV')
 lihtc <- lihtc %>% 
   filter(yr_alloc <= 2019)
 
-lihtc_ca <- lihtc %>% 
-  filter(proj_st == 'CA') %>% 
-  mutate(qct = 0+ 1*(qct==1)) %>% 
-  mutate(dda = 1*(dda!=0))
-
 ```
 
 ```{r data_quality}
-lihtc_ca <- lihtc_ca %>% filter(yr_alloc <= 2019)
+
+# Normalize the values for QCT and DDA
+lihtc <- lihtc %>% 
+  mutate(qct = 0+ 1*(qct==1)) %>% 
+  # Do not distinguish between metro, non-metro, and gulf opportunity zone DDAs
+  mutate(dda = 1*(dda!=0))
+
+# lihtc_ca <- lihtc_ca %>% 
+lihtc_ca <- lihtc %>% 
+  #filter(yr_alloc <= 2018) %>% 
+  filter(proj_st == 'CA') 
 
 # Calculate the number of projects allocated credits by year
 ggplot(mapping = aes(x=yr_alloc)) +
@@ -77,14 +82,15 @@ ggplot(data = li_units_ca, mapping = aes(x=yr_alloc, y=y)) +
 
 qct_sites <- lihtc %>% 
   group_by(proj_st, yr_alloc) %>%
-  mutate(qct = 0+ 1*(qct==1)) %>% 
   summarise(y=mean(qct, na.rm = TRUE))
 
+# Calculate the proportion of California LIHTC projects in QCTs
 ca_qcts <- qct_sites %>% 
   filter(proj_st == "CA") %>% 
   group_by(yr_alloc) %>% 
   summarise(y=mean(y, na.rm = TRUE))
 
+# Calculate the proportion of all other LIHTC projects in QCTs
 us_qcts <- qct_sites %>%
   filter(proj_st != "CA") %>%
   group_by(yr_alloc) %>% 
@@ -104,7 +110,7 @@ ggplot(data = comp_qcts) +
 
 dda_sites <- lihtc %>%
   filter(yr_alloc >= 2003) %>% 
-  # Do not distinguish between metro and non-metro DDAs
+  
   mutate(dda = 1*(dda!=0)) %>%
   group_by(proj_st, yr_alloc) %>%
   summarise(y=mean(dda, na.rm = TRUE))
@@ -128,9 +134,9 @@ ggplot(data = comp_dda) +
   geom_line(mapping = aes(yr_alloc, y.y))
 ```
 
-```{r nonprofits}
+```{r inclusiveness}
 
-
+inclusiveness <- lihtc
 
 ```
 
