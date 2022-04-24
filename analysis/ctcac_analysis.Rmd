@@ -65,23 +65,18 @@ ca_qcts <- qct_sites %>%
   group_by(yr_alloc) %>% 
   summarise(y=mean(y, na.rm = TRUE))
 
-us_qcts <- qct_sites %>% 
+us_qcts <- qct_sites %>%
+  filter(proj_st != "CA") %>%
   group_by(yr_alloc) %>% 
   summarise(y=mean(y, na.rm = TRUE))
 
 comp_qcts <- ca_qcts %>% 
-  inner_join(us_qcts,by="yr_alloc")
+  inner_join(us_qcts,by="yr_alloc") %>% 
+  filter((yr_alloc <= 2019)&(yr_alloc >= 2003))
 
 ggplot(data = comp_qcts) +
   geom_line(mapping = aes(yr_alloc, y.x, color = "green")) +
   geom_line(mapping = aes(yr_alloc, y.y))
-
-ggplot(data = qct_sites) mapping = aes(yr_alloc, color = proj_st)) +
-  geom_line(data = filter(qct_sites, proj_st == "CA")) +
-  stat_summary(fun.data = mean)
-    # geom_line(
-  #   data = filter(qct_sites, proj_st != "CA"),
-  #   stat = stat_sum
 
 ```
 
