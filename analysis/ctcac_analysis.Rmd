@@ -6,32 +6,96 @@ header-includes:
 - \usepackage{siunitx}
 - \newcolumntype{d}{S[input-symbols = ()]}
 output:
-  slidy_presentation: default
-  html_notebook: default
+  powerpoint_presentation: default
   pdf_document: default
+  html_notebook: default
+  slidy_presentation: default
 ---
 
 ```{r setup, include=FALSE}
 
-knitr::opts_chunk$set(warning=FALSE)
+knitr::opts_chunk$set(warning=FALSE, results = FALSE)
 
 ```
 
-# Introduction
+# Intro
 
-Measuring a program impact
+"Despite massive governmental involvement, the LIHTC program
+operates without effective regard to civil rights laws... What little information is available suggests that tax credit developments are racially
+segregated, and that developments serving minorities may be unequal to
+those serving whites."
 
-- Evolving legal landscape
-- Changing federal policies
-- Shifting administrative priorities
-- Public and elite attitudes
+-Florence Wagman Roisman, _Mandates Unsatisfied: The Low Income Housing Tax Credit Program and the Civil Rights Laws_, **(1998)**
 
+"...In LIHTC administration, unit production in high-poverty areas remains the primary program focus."
+
+-Megan Haberle, _Furthering Fair Housing: Lessons for the Road Ahead_, **(2021)**
+
+---
+
+# LIHTC and Fair Housing
+
+Does LIHTC Administration consider integrative goals? If so, how have those goals changed over time and what effect do they have on integration?
+
+## Outline
+- The Low-Income Housing Tax Credit and it's origins
+- Evolving Project Siting Policies
+- What We Know from the Data
+- Small Area DDAs and the Present State
+- Policy Questions and the Future of LIHTC
+
+---
+
+# LIHTC and the Tax Reform Act of 1986
+
+The Low-Income Housing Tax Credit was introduced in the second major tax reform of the Reagan administration and passed by a Republican Senate and a Democratic house.
+
+It was designed to consolidate essentially all other existing rental housing tax credit programs into a single program administered by the IRS.
+
+Originally piloted as temporary program, the long-term outcomes of the program were uncertain. It was made a permanent part of the tax code in 1989 after proving useful for investors, developers, and community groups.
+
+Between 1987 and 2006, the LIHTC program subsidized 30% of all new multifamily rental units. In 2010, LIHTC was associated with about half of all new multifamily construction projects.
+
+---
+
+# How LIHTC Works
+
+Provides developers with federal tax credits for _units developed for low-income renters_. These tax credits can be transferred to corporate investors through credit syndicators, limited partnerships, and other tax accounting magic.
+
+The size of the tax credit is calculated first by taking the total development cost and subtracting the cost of land and advertising. This value is then multiplied by the proportion of units that are designated for low-income renters. This value is called the "Qaulified Basis".
+
+The definition of low-income renter varies but it almost always means people making 60% or less of the area median income (AMI). Their maximum rent is 30% of 60% (or 18%) of the AMI.
+
+The LIHTC program is administered at the state level usually through hosuing finance agencies. Each state must develop rules, Qualified Allocation Plans (QAPs), for determining which projects receive tax credits. 
+
+---
+
+# Place Based Incentives
+
+Qualified Census Tracts are census tracts where either 
+- >50% of the residents have incomes below 60% AMI
+- The poverty rate (30% AMI) is at least 25% of the population
+
+Difficult to Develop Areas
+- Areas where the fair market rent (FMR) is significant relative to the AMI
+
+Projects located in either a QCT or DDA can earn up to an additional 30% of their qualified basis. 
+
+---
+
+# Fair Housing and LIHTC
+
+The program's fair housing policies are governed primarily through affirmatively furthering fair housing rule of the Fair Housing Act and it's extension to the Treasury through Title VIII of the 1968 Civil Rights Act.
+
+Roisman's critique of LIHTC as racially segregated stems largely from the incentive developers receive for siting projects in areas with high levels of poverty, through the QCT basis boost.
+
+In response to advocates, the DDA incentive was added to the program in 2003. How has this affected the placement of LIHTC developments? Is it enough?
 
 ---
 
 # Data & Methods
 
-```{r packages}
+```{r packages, include=FALSE}
 
 library(tidyverse)
 library(haven)
@@ -39,25 +103,28 @@ library(haven)
 ```
 
 
-```{r import_data}
+```{r import_data, include=FALSE}
 # Load National LIHTC data
 lihtc <- read_csv('../data/LIHTCPUB.CSV')
 
 lihtc <- lihtc %>% 
-  filter(yr_alloc <= 2019)
+  filter(yr_alloc <= 2018)
 
 ```
----
-# Data & Methods
-## Examining Data Quality
 
-```{r data_quality}
+---
+
+# Data & Methods
+
+We will examine [LIHTC Property level data](https://www.huduser.gov/portal/datasets/lihtc.html) published by HUD Office of Policy Development and Research. 
+
+```{r data_quality, include=FALSE}
 
 # Normalize the values for QCT and DDA
 lihtc <- lihtc %>% 
   mutate(qct = 0+ 1*(qct==1)) %>% 
   # Do not distinguish between metro, non-metro, and gulf opportunity zone DDAs
-  mutate(dda = 1*(dda!=0))
+  mutate(dda = 1*(dda != 0))
 
 # lihtc_ca <- lihtc_ca %>% 
 lihtc_ca <- lihtc %>% 
@@ -79,70 +146,11 @@ ggplot(data = li_units_ca, mapping = aes(x=yr_alloc, y=y)) +
 
 
 ```
----
-# De-concentrating Poverty
-
-```{r qct}
-
-qct_sites <- lihtc %>% 
-  group_by(proj_st, yr_alloc) %>%
-  summarise(y=mean(qct, na.rm = TRUE))
-
-# Calculate the proportion of California LIHTC projects in QCTs
-ca_qcts <- qct_sites %>% 
-  filter(proj_st == "CA") %>% 
-  group_by(yr_alloc) %>% 
-  summarise(y=mean(y, na.rm = TRUE))
-
-# Calculate the proportion of all other LIHTC projects in QCTs
-us_qcts <- qct_sites %>%
-  filter(proj_st != "CA") %>%
-  group_by(yr_alloc) %>% 
-  summarise(y=mean(y, na.rm = TRUE))
-
-comp_qcts <- ca_qcts %>% 
-  inner_join(us_qcts,by="yr_alloc") %>% 
-  filter((yr_alloc <= 2019)&(yr_alloc >= 2003))
-
-ggplot(data = comp_qcts) +
-  geom_line(mapping = aes(yr_alloc, y.x, color = "green")) +
-  geom_line(mapping = aes(yr_alloc, y.y))
-
-```
----
-# Affordable Housing in Affluent Areas
-
-```{r dda}
-
-dda_sites <- lihtc %>%
-  filter(yr_alloc >= 2003) %>% 
-  mutate(dda = 1*(dda!=0)) %>%
-  group_by(proj_st, yr_alloc) %>%
-  summarise(y=mean(dda, na.rm = TRUE))
-
-ca_dda <- dda_sites %>% 
-  filter(proj_st == "CA") %>% 
-  group_by(yr_alloc) %>% 
-  summarise(y=mean(y, na.rm = TRUE))
-
-us_dda <- dda_sites %>%
-  filter(proj_st != "CA") %>%
-  group_by(yr_alloc) %>% 
-  summarise(y=mean(y, na.rm = TRUE))
-
-comp_dda <- ca_dda %>% 
-  inner_join(us_dda,by="yr_alloc") %>% 
-  filter((yr_alloc <= 2019)&(yr_alloc >= 2003))
-
-ggplot(data = comp_dda) +
-  geom_line(mapping = aes(yr_alloc, y.x, color = "green")) +
-  geom_line(mapping = aes(yr_alloc, y.y))
-```
 
 ---
 # Mixed Income Developments
 
-```{r inclusiveness}
+```{r inclusiveness, echo=FALSE}
 
 mixed_income <- lihtc %>% 
   filter(n_units >0) %>% 
@@ -165,8 +173,96 @@ comp_mi <- mixed_income_ca %>%
   filter((yr_alloc <= 2019))
 
 ggplot(data = comp_mi) +
-  geom_line(mapping = aes(yr_alloc, y.x, color = "green")) +
-  geom_line(mapping = aes(yr_alloc, y.y))
+  geom_line(mapping = aes(yr_alloc, y.x, color = "green"), show.legend=FALSE) +
+  geom_line(mapping = aes(yr_alloc, y.y)) +
+  xlab("Year Tax Credits Allocated") +
+  ylab("% of Units for Low-Income Renters")
 
 ```
+
+---
+
+# Deconcentrating Poverty
+
+```{r qct, echo=FALSE}
+
+qct_sites <- lihtc %>% 
+  group_by(proj_st, yr_alloc) %>%
+  summarise(y=mean(qct, na.rm = TRUE))
+
+# Calculate the proportion of California LIHTC projects in QCTs
+ca_qcts <- qct_sites %>% 
+  filter(proj_st == "CA") %>% 
+  group_by(yr_alloc) %>% 
+  summarise(y=mean(y, na.rm = TRUE))
+
+# Calculate the proportion of all other LIHTC projects in QCTs
+us_qcts <- qct_sites %>%
+  filter(proj_st != "CA") %>%
+  group_by(yr_alloc) %>% 
+  summarise(y=mean(y, na.rm = TRUE))
+
+comp_qcts <- ca_qcts %>% 
+  inner_join(us_qcts,by="yr_alloc") %>% 
+  filter((yr_alloc <= 2019)&(yr_alloc >= 1998))
+
+ggplot(data = comp_qcts) +
+  geom_line(mapping = aes(yr_alloc, y.x, color = "green"), show.legend=FALSE) +
+  geom_line(mapping = aes(yr_alloc, y.y)) +
+  xlab("Year Tax Credits Allocated") +
+  ylab("% of Projects in QCT")
+  
+
+```
+
+---
+
+# Affordable Housing in Affluent Areas
+
+```{r dda, echo=FALSE}
+
+dda_sites <- lihtc %>%
+  filter(yr_alloc >= 2003) %>% 
+  mutate(dda = 1*(dda!=0)) %>%
+  group_by(proj_st, yr_alloc) %>%
+  summarise(y=mean(dda, na.rm = TRUE))
+
+ca_dda <- dda_sites %>% 
+  filter(proj_st == "CA") %>% 
+  group_by(yr_alloc) %>% 
+  summarise(y=mean(y, na.rm = TRUE))
+
+us_dda <- dda_sites %>%
+  filter(proj_st != "CA") %>%
+  group_by(yr_alloc) %>% 
+  summarise(y=mean(y, na.rm = TRUE))
+
+comp_dda <- ca_dda %>% 
+  inner_join(us_dda,by="yr_alloc") %>% 
+  filter((yr_alloc <= 2019)&(yr_alloc >= 1998))
+
+ggplot(data = comp_dda) +
+  geom_line(mapping = aes(yr_alloc, y.x, color = "green"), show.legend=FALSE) +
+  geom_line(mapping = aes(yr_alloc, y.y)) +
+  xlab("Year Tax Credits Allocated") +
+  ylab("% of Projects in DDA")
+
+```
+
+---
+
+# Small Area DDAs
+
+In 2016 the unit of difficult to develop areas switched from the county level to the zip code level. 
+
+Katherine O’Regan [explained in a presentation](https://www.novoco.com/notes-from-novogradac/what-you-need-know-about-2021-ddas-qcts) that by redefining DDAs to be more local should better incentivize developers to build LIHTC housing in lower-poverty opportunity neighborhoods.
+
+---
+
+# Policy Considerations and the Future of LIHTC
+
+- Incorporating LIHTC siting into the CDBG AFFH planning process (Harberle)
+- Changing qualified basis evaluations to encourage more mixed income developments
+- Disparate Impact and Texas DHCA v. The Inclusive Communities Project
+- Changing definition of "Low-Income" to extend LIHTCs existing tendency to deconcentrate poverty
 
