@@ -1,0 +1,73 @@
+---
+title: "Fair LIHTC EDA"
+author: "Colin Ries"
+header-includes:
+- \usepackage{booktabs}
+- \usepackage{siunitx}
+- \newcolumntype{d}{S[input-symbols = ()]}
+output:
+  pdf_document: default
+  html_notebook: default
+---
+
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(warning=FALSE, results = FALSE)
+
+```
+
+```{r packages, include=FALSE}
+
+library(tidyverse)
+library(haven)
+library(readxl)
+
+```
+
+# Data
+
+## LIHTC Property-Level Data
+
+Downloaded LIHTC property data from [https://lihtc.huduser.gov/lihtcpub.zip](https://lihtc.huduser.gov/lihtcpub.zip) on April 22, 2022.
+
+```{r import_lihtc_data}
+# Load National LIHTC data
+lihtc <- read_csv('../data/LIHTCPUB.CSV')
+
+# Normalize the values for QCT and DDA
+lihtc <- lihtc %>% 
+  mutate(qct = 0+ 1*(qct==1)) %>% 
+  # Do not distinguish between metro, non-metro, and gulf opportunity zone DDAs
+  mutate(dda = 1*(dda != 0))
+
+```
+
+```{r test_lihtc_data}
+
+# Allocation data only 
+lihtc <- lihtc %>% 
+  filter(yr_alloc <= 2018)
+
+# Calculate the number of projects allocated credits by year
+ggplot(mapping = aes(x=yr_alloc)) +
+  #geom_freqpoly(data = lihtc) +
+  geom_freqpoly(data = lihtc_ca)
+
+# Calculate the total number of low-income units for each allocation year
+li_units_ca <- lihtc_ca %>% 
+  group_by(yr_alloc) %>% 
+  summarise(y = sum(li_units, na.rm=TRUE))
+
+ggplot(data = li_units_ca, mapping = aes(x=yr_alloc, y=y)) +
+  geom_line()
+
+```
+
+
+
+
+
+Downloaded Small Area DDA data from [https://www.huduser.gov/portal/datasets/fmr/fmr2022/fy2022_safmrs.xlsx](https://www.huduser.gov/portal/datasets/fmr/fmr2022/fy2022_safmrs.xlsx) on April 28, 2022.
+
+# Retroactively Examining SADDAs
+
