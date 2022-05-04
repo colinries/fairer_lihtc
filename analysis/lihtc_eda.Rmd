@@ -50,15 +50,14 @@ lihtc <- lihtc %>%
 
 # Calculate the number of projects allocated credits by year
 ggplot(mapping = aes(x=yr_alloc)) +
-  #geom_freqpoly(data = lihtc) +
-  geom_freqpoly(data = lihtc_ca)
+  geom_freqpoly(data = lihtc)
 
 # Calculate the total number of low-income units for each allocation year
-li_units_ca <- lihtc_ca %>% 
+li_units <- lihtc %>% 
   group_by(yr_alloc) %>% 
   summarise(y = sum(li_units, na.rm=TRUE))
 
-ggplot(data = li_units_ca, mapping = aes(x=yr_alloc, y=y)) +
+ggplot(data = li_units, mapping = aes(x=yr_alloc, y=y)) +
   geom_line()
 
 ```
