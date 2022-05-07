@@ -30,15 +30,19 @@ library(readxl)
 
 Downloaded LIHTC property data from [https://lihtc.huduser.gov/lihtcpub.zip](https://lihtc.huduser.gov/lihtcpub.zip) on April 22, 2022.
 
-```{r import_lihtc_data}
+```{r tidy_lihtc_data}
 # Load National LIHTC data
 lihtc <- read_csv('../data/LIHTCPUB.CSV')
 
 # Normalize the values for QCT and DDA
 lihtc <- lihtc %>% 
-  mutate(qct = 0+ 1*(qct==1)) %>% 
+  mutate(qct = 0 +(qct==1)) %>% 
   # Do not distinguish between metro, non-metro, and gulf opportunity zone DDAs
-  mutate(dda = 1*(dda != 0))
+  mutate(dda = 0 +(dda==1)) %>% 
+  mutate(non_prof = 0 + (non_prof==1)) %>% 
+  mutate(trgt_fam = 0 + (trgt_fam==1)) %>% 
+  mutate(trgt_hml = 0 + (trgt_hml==1)) %>% 
+  mutate(trgt_eld = 0 + (trgt_eld==1))
 
 ```
 
@@ -46,7 +50,8 @@ lihtc <- lihtc %>%
 
 # Allocation data only 
 lihtc <- lihtc %>% 
-  filter(yr_alloc <= 2018)
+  filter(yr_alloc <= 2018) %>% 
+  filter(type == 1)
 
 # Calculate the number of projects allocated credits by year
 ggplot(mapping = aes(x=yr_alloc)) +
@@ -65,8 +70,10 @@ ggplot(data = li_units, mapping = aes(x=yr_alloc, y=y)) +
 
 
 
-
 Downloaded Small Area DDA data from [https://www.huduser.gov/portal/datasets/fmr/fmr2022/fy2022_safmrs.xlsx](https://www.huduser.gov/portal/datasets/fmr/fmr2022/fy2022_safmrs.xlsx) on April 28, 2022.
 
 # Retroactively Examining SADDAs
+
+
+
 
