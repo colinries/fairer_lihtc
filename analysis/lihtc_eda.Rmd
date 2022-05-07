@@ -42,7 +42,8 @@ lihtc <- lihtc %>%
   mutate(non_prof = 0 + (non_prof==1)) %>% 
   mutate(trgt_fam = 0 + (trgt_fam==1)) %>% 
   mutate(trgt_hml = 0 + (trgt_hml==1)) %>% 
-  mutate(trgt_eld = 0 + (trgt_eld==1))
+  mutate(trgt_eld = 0 + (trgt_eld==1)) %>% 
+  mutate(cnty_fips = str_sub(fips2010, 3,7))
 
 ```
 
@@ -74,6 +75,23 @@ Downloaded Small Area DDA data from [https://www.huduser.gov/portal/datasets/fmr
 
 # Retroactively Examining SADDAs
 
+```{r tidy_saddas_data}
 
+sadda <- read_xlsx('../data/2022-DDAs-Data-Used-to-Designate.xlsx', sheet=1)
+
+sadda <- sadda %>% 
+  rename(sadda = "2022 SDDA (1=SDDA)")
+
+nm_dda <- read_xlsx('../data/2022-DDAs-Data-Used-to-Designate.xlsx', sheet=2)
+
+nm_dda <- nm_dda %>% 
+  #rename(nmdda = '2022 NMDDA') %>% 
+  rename(cnty_fips = FIPS)
+  filter(nmdda ==0)
+
+lihtc <- lihtc %>% 
+  anti_join(nm_dda)
+
+```
 
 
