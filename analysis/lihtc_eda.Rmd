@@ -21,6 +21,8 @@ knitr::opts_chunk$set(warning=FALSE, results = FALSE)
 library(tidyverse)
 library(haven)
 library(readxl)
+library(estimatr)
+library(modelsummary)
 
 ```
 
@@ -34,25 +36,27 @@ Downloaded LIHTC property data from [https://lihtc.huduser.gov/lihtcpub.zip](htt
 # Load National LIHTC data
 lihtc <- read_csv('../data/LIHTCPUB.CSV')
 
-# Normalize the values for QCT and DDA
+# Normalize the dummy variables
 lihtc <- lihtc %>% 
-  mutate(qct = 0 +(qct==1)) %>% 
+  mutate(qct = 0 + (qct==1)) %>% 
   # Do not distinguish between metro, non-metro, and gulf opportunity zone DDAs
-  mutate(dda = 0 +(dda==1)) %>% 
+  mutate(dda = 0 + (dda==1)) %>% 
+  mutate(metro = 0 + (metro!=3)) %>% 
   mutate(non_prof = 0 + (non_prof==1)) %>% 
   mutate(trgt_fam = 0 + (trgt_fam==1)) %>% 
   mutate(trgt_hml = 0 + (trgt_hml==1)) %>% 
   mutate(trgt_eld = 0 + (trgt_eld==1)) %>% 
-  mutate(cnty_fips = str_sub(fips2010, 3,7))
+  mutate(nine_prcnt = 0 + (credit==1))
 
 ```
 
 ```{r test_lihtc_data}
 
-# Allocation data only 
+# Allocation data for new developments in metro areas 
 lihtc <- lihtc %>% 
   filter(yr_alloc <= 2018) %>% 
-  filter(type == 1)
+  filter(type == 1) %>% 
+  filter(metro == 1)
 
 # Calculate the number of projects allocated credits by year
 ggplot(mapping = aes(x=yr_alloc)) +
@@ -77,20 +81,62 @@ Downloaded Small Area DDA data from [https://www.huduser.gov/portal/datasets/fmr
 
 ```{r tidy_saddas_data}
 
+# Import 2022 Metropolitan DDAs, from https://www.huduser.gov/portal/datasets/qct.html
 sadda <- read_xlsx('../data/2022-DDAs-Data-Used-to-Designate.xlsx', sheet=1)
 
+# Import zcta to FIPS crosswalk, from https://www.census.gov/geographies/reference-files/time-series/geo/relationship-files.2010.html 
+zcta_to_ct <- read_csv("../data/zcta_tract_rel_10.txt")
+
+# Identify 2022 Small Area DDA by ZCTA
 sadda <- sadda %>% 
-  rename(sadda = "2022 SDDA (1=SDDA)")
+  rename(sdda = "2022 SDDA (1=SDDA)") %>%
+  rename(zcta = "ZIP Code Tabulation Area (ZCTA)") %>%
+  filter(sdda == 1) 
 
-nm_dda <- read_xlsx('../data/2022-DDAs-Data-Used-to-Designate.xlsx', sheet=2)
+# Identify all Census Tracts in 2022 SADDAs
+zcta_to_ct <-  zcta_to_ct %>% 
+  rename(zcta = ZCTA5) %>%
+  rename(fips = GEOID) %>% 
+  filter(zcta %in% sadda$zcta)
 
-nm_dda <- nm_dda %>% 
-  #rename(nmdda = '2022 NMDDA') %>% 
-  rename(cnty_fips = FIPS)
-  filter(nmdda ==0)
+# Import Non-Metropolitan DDAs
+# nm_dda <- read_xlsx('../data/2022-DDAs-Data-Used-to-Designate.xlsx', sheet=2)
+
+# nm_dda <- nm_dda %>% 
+#   rename(nmdda = '2022 NMDDA') %>% 
+#   rename(cnty_fips = FIPS)
+#   filter(nmdda ==0)
+
+```
+
+```{r op_nbh}
 
 lihtc <- lihtc %>% 
-  anti_join(nm_dda)
+  mutate(sadda = 0 + (fips2010 %in% zcta_to_ct$fips)) %>% 
+  mutate(op_nbh = 0 + (sadda & !qct)) 
+  
+# lihtc %>% 
+#   group_by(yr_alloc) %>% 
+#   summarize(prop = mean(op_nbh, na.rm=TRUE)) %>% 
+#   ggplot(aes(x=yr_alloc,y=prop)) +
+#     geom_line() +
+#     geom_smooth()
+
+```
+
+
+```{r dda_model}
+
+dda_model <-lm_robust(sadda~qct+yr_alloc+non_prof+trgt_pop+trgt_fam+trgt_eld+trgt_hml+nine_prcnt , data = lihtc, fixed_effects = proj_st)
+
+modelsummary(dda_model, stars = TRUE)
+```
+
+```{r qct_model}
+
+qct_model <-lm_robust(qct~yr_alloc+non_prof+trgt_pop+trgt_fam+trgt_eld+trgt_hml+nine_prcnt , data = lihtc, fixed_effects = proj_st)
+
+modelsummary(qct_model, stars = TRUE)
 
 ```
 
