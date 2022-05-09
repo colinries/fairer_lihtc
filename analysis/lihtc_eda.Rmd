@@ -115,29 +115,37 @@ lihtc <- lihtc %>%
   mutate(sadda = 0 + (fips2010 %in% zcta_to_ct$fips)) %>% 
   mutate(op_nbh = 0 + (sadda & !qct)) 
   
-# lihtc %>% 
-#   group_by(yr_alloc) %>% 
-#   summarize(prop = mean(op_nbh, na.rm=TRUE)) %>% 
-#   ggplot(aes(x=yr_alloc,y=prop)) +
-#     geom_line() +
-#     geom_smooth()
+lihtc %>%
+  group_by(yr_alloc) %>%
+  summarize(prop = mean(op_nbh, na.rm=TRUE)) %>%
+  ggplot(aes(x=yr_alloc,y=prop)) +
+    geom_line() +
+    geom_smooth()
 
 ```
 
 
-```{r dda_model}
+```{r sadda_model}
 
-dda_model <-lm_robust(sadda~qct+yr_alloc+non_prof+trgt_pop+trgt_fam+trgt_eld+trgt_hml+nine_prcnt , data = lihtc, fixed_effects = proj_st)
+sadda_model <-lm_robust(sadda~qct+yr_alloc+non_prof+trgt_pop+trgt_fam+trgt_eld+trgt_hml+nine_prcnt , data = lihtc, fixed_effects = proj_st)
 
-modelsummary(dda_model, stars = TRUE)
+modelsummary(sadda_model, stars = TRUE, output = 'latex')
+
 ```
 
 ```{r qct_model}
 
 qct_model <-lm_robust(qct~yr_alloc+non_prof+trgt_pop+trgt_fam+trgt_eld+trgt_hml+nine_prcnt , data = lihtc, fixed_effects = proj_st)
 
-modelsummary(qct_model, stars = TRUE)
+modelsummary(qct_model, stars = TRUE, output = 'latex')
 
 ```
 
+```{r op_nbh_model}
+
+op_nbh_model <-lm_robust(op_nbh~yr_alloc+non_prof+trgt_pop+trgt_fam+trgt_eld+trgt_hml+nine_prcnt , data = lihtc, fixed_effects = proj_st)
+
+modelsummary(op_nbh_model, stars = TRUE, output = 'latex')
+
+```
 
