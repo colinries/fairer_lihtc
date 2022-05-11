@@ -90,7 +90,22 @@ qct_model <-lm_robust(qct~yr_alloc+non_prof+trgt_pop+trgt_fam+trgt_eld+trgt_hml+
 modelsummary(qct_model, stars = TRUE, output = 'latex')
 
 ```
+# Difficult to Develop Areas
 
+```{r dda_model}
+
+lihtc %>%
+  group_by(yr_alloc) %>%
+  summarize(prop = mean(dda, na.rm=TRUE)) %>%
+  ggplot(aes(x=yr_alloc,y=prop)) +
+    geom_line()
+
+dda_model <-lm_robust(dda~yr_alloc+non_prof+trgt_pop+trgt_fam+trgt_eld+trgt_hml+nine_prcnt, 
+                      data = lihtc, fixed_effects = proj_st)
+
+modelsummary(dda_model, stars = TRUE, output = 'latex')
+
+```
 
 # Retroactively Examining SADDAs
 
