@@ -74,7 +74,15 @@ ggplot(data = li_units, mapping = aes(x=yr_alloc, y=y)) +
 
 # Concentrations of Poverty
 
+The primary critique of the LIHTC program is that it incentivizes perpetuating concentrations of poverty by granting a basis boost for developments in QCTs. We examine whether siting of developments in QCTs has increased over time. 
+
 ```{r qct_model}
+
+lihtc %>%
+  group_by(yr_alloc) %>%
+  summarize(prop = mean(qct, na.rm=TRUE)) %>%
+  ggplot(aes(x=yr_alloc,y=prop)) +
+    geom_line()
 
 qct_model <-lm_robust(qct~yr_alloc+non_prof+trgt_pop+trgt_fam+trgt_eld+trgt_hml+nine_prcnt, 
                       data = lihtc, fixed_effects = proj_st)
