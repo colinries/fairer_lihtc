@@ -133,6 +133,9 @@ zcta_to_ct <-  zcta_to_ct %>%
   rename(fips = GEOID) %>% 
   filter(zcta %in% sadda$zcta)
 
+lihtc <- lihtc %>% 
+  mutate(sadda = 0 + (fips2010 %in% zcta_to_ct$fips))
+
 # Import Non-Metropolitan DDAs
 # nm_dda <- read_xlsx('../data/2022-DDAs-Data-Used-to-Designate.xlsx', sheet=2)
 
@@ -140,6 +143,21 @@ zcta_to_ct <-  zcta_to_ct %>%
 #   rename(nmdda = '2022 NMDDA') %>% 
 #   rename(cnty_fips = FIPS)
 #   filter(nmdda ==0)
+
+```
+
+```{r sadda_model}
+
+lihtc %>%
+  group_by(yr_alloc) %>%
+  summarize(prop = mean(sadda, na.rm=TRUE)) %>%
+  ggplot(aes(x=yr_alloc,y=prop)) +
+    geom_line()
+
+sadda_model <-lm_robust(sadda~qct+yr_alloc+non_prof+trgt_pop+trgt_fam+trgt_eld+trgt_hml+nine_prcnt, 
+                        data = lihtc, fixed_effects = proj_st)
+
+modelsummary(sadda_model, stars = TRUE, output = 'latex')
 
 ```
 
@@ -158,13 +176,7 @@ lihtc %>%
 ```
 
 
-```{r sadda_model}
 
-sadda_model <-lm_robust(sadda~qct+yr_alloc+non_prof+trgt_pop+trgt_fam+trgt_eld+trgt_hml+nine_prcnt, data = lihtc, fixed_effects = proj_st)
-
-modelsummary(sadda_model, stars = TRUE, output = 'latex')
-
-```
 
 
 
