@@ -54,13 +54,13 @@ lihtc <- lihtc %>%
 
 # Allocation data for new developments in metro areas 
 lihtc <- lihtc %>% 
-  filter(yr_alloc <= 2018) %>% 
+  filter(yr_alloc <= 2015) %>% 
   filter(type == 1) %>% 
   filter(metro == 1)
 
 # Calculate the number of projects allocated credits by year
 ggplot(mapping = aes(x=yr_alloc)) +
-  geom_freqpoly(data = lihtc)
+  geom_freqpoly(data = lihtc, na.rm=TRUE)
 
 # Calculate the total number of low-income units for each allocation year
 li_units <- lihtc %>% 
@@ -119,15 +119,15 @@ lihtc %>%
   group_by(yr_alloc) %>%
   summarize(prop = mean(op_nbh, na.rm=TRUE)) %>%
   ggplot(aes(x=yr_alloc,y=prop)) +
-    geom_line() +
-    geom_smooth()
+    geom_line()
 
 ```
 
 
 ```{r sadda_model}
 
-sadda_model <-lm_robust(sadda~qct+yr_alloc+non_prof+trgt_pop+trgt_fam+trgt_eld+trgt_hml+nine_prcnt , data = lihtc, fixed_effects = proj_st)
+sadda_model <-lm_robust(sadda~qct+yr_alloc+non_prof+trgt_pop+trgt_fam+trgt_eld+trgt_hml+nine_prcnt, 
+                        data = lihtc, fixed_effects = proj_st)
 
 modelsummary(sadda_model, stars = TRUE, output = 'latex')
 
@@ -135,7 +135,8 @@ modelsummary(sadda_model, stars = TRUE, output = 'latex')
 
 ```{r qct_model}
 
-qct_model <-lm_robust(qct~yr_alloc+non_prof+trgt_pop+trgt_fam+trgt_eld+trgt_hml+nine_prcnt , data = lihtc, fixed_effects = proj_st)
+qct_model <-lm_robust(qct~yr_alloc+non_prof+trgt_pop+trgt_fam+trgt_eld+trgt_hml+nine_prcnt, 
+                      data = lihtc, fixed_effects = proj_st)
 
 modelsummary(qct_model, stars = TRUE, output = 'latex')
 
@@ -143,9 +144,10 @@ modelsummary(qct_model, stars = TRUE, output = 'latex')
 
 ```{r op_nbh_model}
 
-op_nbh_model <-lm_robust(op_nbh~yr_alloc+non_prof+trgt_pop+trgt_fam+trgt_eld+trgt_hml+nine_prcnt , data = lihtc, fixed_effects = proj_st)
+op_nbh_model <-lm_robust(op_nbh~yr_alloc+non_prof+trgt_pop+trgt_fam+trgt_eld+trgt_hml+nine_prcnt, 
+                         data = lihtc, fixed_effects = proj_st)
 
-modelsummary(op_nbh_model, stars = TRUE, output = 'latex')
+modelsummary(op_nbh_model, stars = TRUE, output = 'figures/op_nbh.png')
 
 ```
 
