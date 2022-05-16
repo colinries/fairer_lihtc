@@ -82,7 +82,9 @@ lihtc %>%
   group_by(yr_alloc) %>%
   summarize(prop = mean(qct, na.rm=TRUE)) %>%
   ggplot(aes(x=yr_alloc,y=prop)) +
-    geom_line()
+    geom_line() +
+    xlab("Tax Credit Allocation Year") +
+    ylab("Proportion of New Projects Located in QCT")
 
 qct_model <-lm_robust(qct~yr_alloc+non_prof+trgt_pop+trgt_fam+trgt_eld+trgt_hml+nine_prcnt, 
                       data = lihtc, fixed_effects = proj_st)
@@ -98,7 +100,9 @@ lihtc %>%
   group_by(yr_alloc) %>%
   summarize(prop = mean(dda, na.rm=TRUE)) %>%
   ggplot(aes(x=yr_alloc,y=prop)) +
-    geom_line()
+    geom_line() +
+    xlab("Tax Credit Allocation Year") +
+    ylab("Proportion of New Projects Located in DDA")
 
 dda_model <-lm_robust(dda~yr_alloc+non_prof+trgt_pop+trgt_fam+trgt_eld+trgt_hml+nine_prcnt, 
                       data = lihtc, fixed_effects = proj_st)
@@ -152,7 +156,9 @@ lihtc %>%
   group_by(yr_alloc) %>%
   summarize(prop = mean(sadda, na.rm=TRUE)) %>%
   ggplot(aes(x=yr_alloc,y=prop)) +
-    geom_line()
+    geom_line() +
+    xlab("Tax Credit Allocation Year") +
+    ylab("Proportion of New Projects Located in SADDA")
 
 sadda_model <-lm_robust(sadda~qct+yr_alloc+non_prof+trgt_pop+trgt_fam+trgt_eld+trgt_hml+nine_prcnt, 
                         data = lihtc, fixed_effects = proj_st)
@@ -175,17 +181,22 @@ lihtc %>%
 
 ```
 
-
-
-
-
-
 ```{r op_nbh_model}
 
 op_nbh_model <-lm_robust(op_nbh~yr_alloc+non_prof+trgt_pop+trgt_fam+trgt_eld+trgt_hml+nine_prcnt, 
                          data = lihtc, fixed_effects = proj_st)
 
 modelsummary(op_nbh_model, stars = TRUE, output = 'figures/op_nbh.png')
+
+```
+
+```{r nine_prcnt}
+
+lihtc %>%
+  group_by(yr_alloc) %>%
+  summarize(prop = mean(nine_prcnt, na.rm=TRUE)) %>%
+  ggplot(aes(x=yr_alloc,y=prop)) +
+    geom_line()
 
 ```
 
