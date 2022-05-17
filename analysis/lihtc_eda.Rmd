@@ -89,7 +89,7 @@ lihtc %>%
 qct_model <-lm_robust(qct~yr_alloc+non_prof+trgt_pop+trgt_fam+trgt_eld+trgt_hml+nine_prcnt, 
                       data = lihtc, fixed_effects = proj_st)
 
-modelsummary(qct_model, stars = TRUE, output = 'latex')
+modelsummary(qct_model, stars = TRUE, output = 'qct_model.png')
 
 ```
 # Difficult to Develop Areas
@@ -102,12 +102,13 @@ lihtc %>%
   ggplot(aes(x=yr_alloc,y=prop)) +
     geom_line() +
     xlab("Tax Credit Allocation Year") +
-    ylab("Proportion of New Projects Located in DDA")
+    ylab("Proportion of New Projects Located in DDA") +
+    
 
 dda_model <-lm_robust(dda~yr_alloc+non_prof+trgt_pop+trgt_fam+trgt_eld+trgt_hml+nine_prcnt, 
                       data = lihtc, fixed_effects = proj_st)
 
-modelsummary(dda_model, stars = TRUE, output = 'latex')
+modelsummary(dda_model, stars = TRUE, output = 'dda_model.png')
 
 ```
 
@@ -163,9 +164,18 @@ lihtc %>%
 sadda_model <-lm_robust(sadda~qct+yr_alloc+non_prof+trgt_pop+trgt_fam+trgt_eld+trgt_hml+nine_prcnt, 
                         data = lihtc, fixed_effects = proj_st)
 
-modelsummary(sadda_model, stars = TRUE, output = 'latex')
+modelsummary(sadda_model, stars = TRUE, output = 'sadda_model.png')
 
 ```
+
+```{r model_output}
+
+list("QCT" = qct_model, "DDA" = dda_model, "SADDA" = sadda_model) %>% 
+  modelsummary(stars = TRUE, title = "LIHTC Siting Trends", 
+               gof_omit="R2|Num", output = 'models_output.png', )
+
+```
+
 
 ```{r op_nbh}
 
